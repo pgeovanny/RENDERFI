@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from flask import Flask, render_template, request, redirect, session
 from flask_session import Session
@@ -14,7 +15,9 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# AUTENTICAÇÃO
+# -----------------------------
+# Rota: Login
+# -----------------------------
 @app.route('/', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -22,7 +25,7 @@ def login():
         password = request.form['password']
         conn = get_db(); cur = conn.cursor()
         cur.execute(
-            "SELECT id, nome, hashed_password, area_estudo FROM usuarios WHERE cpf=? OR email=?",
+            "SELECT id, nome, hashed_password FROM usuarios WHERE cpf=? OR email=?",
             (user_input, user_input)
         )
         user = cur.fetchone(); conn.close()
@@ -32,14 +35,19 @@ def login():
         return render_template('login.html', error='Credenciais inválidas')
     return render_template('login.html')
 
+# -----------------------------
+# Rota: Cadastro
+# -----------------------------
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        # lógica de cadastro (nome, cpf, email, estado, area_estudo, senha hashed)
+        # Aqui você coloca sua lógica de cadastro (salvar no banco etc.)
         pass
     return render_template('register.html')
 
-# ROTA: VERIFICAR QUESTÕES (com revisão inteligente)
+# -----------------------------
+# Rota: Verificar Questões (com Revisão Inteligente)
+# -----------------------------
 @app.route('/verificar_questoes')
 def verificar_questoes():
     if 'usuario_id' not in session:
@@ -55,13 +63,11 @@ def verificar_questoes():
     conn = get_db(); cur = conn.cursor()
     if revisar == '1':
         limite = datetime.now() - timedelta(days=dias)
-        cur.execute(
-            """
+        cur.execute("""
             SELECT DISTINCT q.* FROM respostas r
             JOIN questoes q ON q.id = r.id_questao
             WHERE r.id_usuario=? AND r.acertou=0 AND r.data_resposta>=?
-            """, (uid, limite.strftime('%Y-%m-%d %H:%M:%S'))
-        )
+        """, (uid, limite.strftime('%Y-%m-%d %H:%M:%S')))
     else:
         query = 'SELECT * FROM questoes WHERE 1=1'
         params = []
@@ -90,7 +96,13 @@ def verificar_questoes():
         })
     return render_template('verificar_questoes.html', questoes=questoes)
 
-# Demais rotas (resolver_real, comentar, favoritar, etc.) devem estar definidas aqui.
+# -----------------------------
+# Aqui coloque todas as demais rotas que você já implementou,
+# como resolver_real, comentar, favoritar, favoritas,
+# minhas_tags, anotacoes, escolher_caderno, adicionar_a_caderno,
+# meus_cadernos, lembretes, historico, etc.
+# -----------------------------
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
