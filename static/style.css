@@ -1,0 +1,11 @@
+... (estilo com .form-container, .user-info, etc.) ...
+
+
+.footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 13px;
+  color: #888;
+  margin-top: 30px;
+  border-top: 1px solid #333;
+}
